@@ -190,18 +190,31 @@ def extract_channel_identifier(url: str) -> tuple[str, str]:
 
 def get_channel_videos(channel_url: str, limit: int = None):
     """Get a list of all videos from a YouTube channel."""
+    import json
+    
     id_type, identifier = extract_channel_identifier(channel_url)
     
     print(f"📺 Fetching videos from channel: {identifier}")
     
-    if id_type == 'channel_id':
-        videos = scrapetube.get_channel(channel_id=identifier, limit=limit)
-    elif id_type == 'username':
-        videos = scrapetube.get_channel(channel_username=identifier, limit=limit)
-    else:
-        videos = scrapetube.get_channel(channel_url=channel_url, limit=limit)
-    
-    return videos
+    try:
+        if id_type == 'channel_id':
+            videos = scrapetube.get_channel(channel_id=identifier, limit=limit)
+        elif id_type == 'username':
+            videos = scrapetube.get_channel(channel_username=identifier, limit=limit)
+        else:
+            videos = scrapetube.get_channel(channel_url=channel_url, limit=limit)
+        
+        return videos
+    except json.JSONDecodeError as e:
+        raise ValueError(
+            f"Failed to fetch channel data (JSON error: {e})\n"
+            "This usually means:\n"
+            "  1. The channel URL or username is incorrect\n"
+            "  2. The channel doesn't exist or was deleted\n"
+            "  3. YouTube is rate-limiting your requests\n"
+            "  4. Network connectivity issues\n\n"
+            f"Please verify the channel exists: https://www.youtube.com/@{identifier}"
+        )
 
 
 
